@@ -2,7 +2,7 @@
 
 See which Claude Code calls cost you the most, by context size.
 
-I wrote this after pricing my own logs. About 30% of my cost came from the 11% of calls that sent 400k+ tokens of context. Sub-agents were about half. I run long sessions and lean on sub-agents a lot, so I'd expect most people's numbers to look quite different. This script shows yours.
+I wrote this after pricing my own logs. About 30% of my cost came from the 12% of calls that sent 400k+ tokens of context. Sub-agents were about half. I run long sessions and lean on sub-agents a lot, so I'd expect most people's numbers to look quite different. This script shows yours.
 
 ```
 $ python ctxtax.py
