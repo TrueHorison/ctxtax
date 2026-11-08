@@ -55,6 +55,23 @@ class T(unittest.TestCase):
         self.assertEqual(r["subagent"]["calls"], 3)
         self.assertEqual(sorted(g["turns"] for g in r["subagent"]["top"]), [1, 2])
 
+    def test_band_split(self):
+        rows = {"s.jsonl": [asst("a", 500_000, out=0), asst("b", 600_000, out=0, side=True, agentId="x"),
+                            asst("c", 50_000, out=0, side=True, agentId="x")],
+                "s/subagents/agent-y.jsonl": [asst("d", 700_000, out=0)]}
+        r = self.run_on(rows)
+        big, small = r["bands"]["400k+"], r["bands"]["<100k"]
+        self.assertEqual((big["calls"], big["sub_calls"]), (3, 2))
+        self.assertEqual((small["calls"], small["sub_calls"]), (1, 1))
+        self.assertAlmostEqual(big["sub_cost"], big["cost"] * (600 + 700) / 1800, places=6)
+        self.assertAlmostEqual(big["sub_share"], 1300 / 1800, places=6)
+        self.assertEqual(r["bands"]["100-200k"]["sub_share"], 0.0)   # empty band: no divide by zero
+        out = ctxtax.render(r)
+        self.assertIn("% sub", out)
+        self.assertIn("400k+ split: main", out)
+        self.assertIn("(1 calls), sub-agent", out)
+        self.assertIn("(2 calls)", out)
+
     def test_limits(self):
         rows = [asst("m1", 10, ts="2026-01-01T00:00:00Z"),
                 err("You have hit your usage limit", "2026-01-01T00:10:00Z"),
