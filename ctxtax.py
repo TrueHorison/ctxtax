@@ -133,14 +133,18 @@ def analyse(root):
                               "group": d.get("agentId") or (path if sub_path else None)}
     total = sum(c["cost"] for c in calls.values())
     n = len(calls)
-    bands = {b[0]: {"calls": 0, "cost": 0.0} for b in BANDS}
+    bands = {b[0]: {"calls": 0, "cost": 0.0, "sub_calls": 0, "sub_cost": 0.0} for b in BANDS}
     for c in calls.values():
         b = bands[band_of(c["ctx"])]
         b["calls"] += 1
         b["cost"] += c["cost"]
+        if c["side"]:   # same test as the sub-agent section below
+            b["sub_calls"] += 1
+            b["sub_cost"] += c["cost"]
     for b in bands.values():
         b["call_share"] = b["calls"] / n if n else 0.0
         b["cost_share"] = b["cost"] / total if total else 0.0
+        b["sub_share"] = b["sub_cost"] / b["cost"] if b["cost"] else 0.0   # sub-agent part of this band's cost
     side_cost = sum(c["cost"] for c in calls.values() if c["side"])
     groups = {}
     for c in calls.values():
@@ -195,9 +199,13 @@ def render(r):
         L.append(warning_line(r))
     L += ["",
          "Context tax (by size of context sent per call)",
-         f"  {'band':<10}{'calls':>8}{'% calls':>9}{'cost':>12}{'% cost':>8}"]
+         f"  {'band':<10}{'calls':>8}{'% calls':>9}{'cost':>12}{'% cost':>8}{'% sub':>8}"]
     for k, b in r["bands"].items():
-        L.append(f"  {k:<10}{b['calls']:>8}{b['call_share']:>9.1%}{b['cost']:>12,.2f}{b['cost_share']:>8.1%}")
+        L.append(f"  {k:<10}{b['calls']:>8}{b['call_share']:>9.1%}{b['cost']:>12,.2f}{b['cost_share']:>8.1%}"
+                 f"{b['sub_share']:>8.0%}")
+    big = r["bands"]["400k+"]
+    L.append(f"  400k+ split: main ${big['cost'] - big['sub_cost']:,.2f} ({big['calls'] - big['sub_calls']} calls), "
+             f"sub-agent ${big['sub_cost']:,.2f} ({big['sub_calls']} calls)")
     s = r["subagent"]
     L += ["", f"Sub-agents: ${s['cost']:,.2f} ({s['share']:.1%} of cost, {s['calls']} calls)",
           "  Top 5 sub-agent tasks:", f"  {'#':<3}{'cost':>10}{'turns':>7}{'output tokens':>15}"]

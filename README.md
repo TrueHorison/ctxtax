@@ -9,11 +9,12 @@ $ python ctxtax.py
 ctxtax: 19 calls, $1.95 at list-price equivalents
 
 Context tax (by size of context sent per call)
-  band         calls  % calls        cost  % cost
-  <100k            3    15.8%        0.06    3.2%
-  100-200k         3    15.8%        0.18    9.0%
-  200-400k         7    36.8%        0.71   36.5%
-  400k+            6    31.6%        1.00   51.2%
+  band         calls  % calls        cost  % cost   % sub
+  <100k            3    15.8%        0.06    3.2%      0%
+  100-200k         3    15.8%        0.18    9.0%      0%
+  200-400k         7    36.8%        0.71   36.5%      0%
+  400k+            6    31.6%        1.00   51.2%      0%
+  400k+ split: main $1.00 (6 calls), sub-agent $0.00 (0 calls)
 
 Sub-agents: $0.00 (0.0% of cost, 0 calls)
 Errors: 0 API-error messages, 0 mention a limit; median gap after: n/a
@@ -40,6 +41,10 @@ It reads `~/.claude/projects` by default. Pass another folder as the first argum
 - `--json` prints the same numbers as JSON.
 - `--share` prints a short summary with no paths or ids, if you want to paste it somewhere.
 - `--meter` prints one line per 5-hour limit hit: the day, the usage in the 5 hours before it, and the model mix.
+
+## Reading the table
+
+`% sub` is how much of that band's cost came from sub-agent calls. The `400k+ split` line shows the same thing for the biggest band in dollars and calls, so you can tell whether your expensive calls come from long main sessions or from sub-agents.
 
 ## How it works
 
